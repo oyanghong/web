@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+        第一点的坐标：<input type="text" class="zb"/><input type="text" class="zb"/><br/>
+        第二点的坐标：<input type="text" class="zb"/><input type="text" class="zb"/>
+        <input type="button" value="消除" onclick="del()"/><br/>
+        <div id="content"></div>
+        <script>
+            //1.首先，要求用户输入游戏的行和列
+            var row_len=0;
+            var column_len=0;
+            row_len=prompt("请输入棋盘的行数：");
+            //做循环，一直循环，要用户输入行数，知道满足条件为止
+            //注意：1.要大于0   2.不能为奇数
+            //if语句判断不能一直循环
+            while (row_len<=0  ||  row_len%2!=0){
+                row_len=prompt("输入有误，请重新输入棋盘的行数：");
+            }
+            column_len=prompt("请输入棋盘的列数：");
+
+            while (column_len<=0  ||  column_len%2!=0){
+                column_len=prompt("输入有误，请重新输入棋盘的列数：");
+            }
+
+
+            //2.生成棋盘
+            var chessBoard=new Array();
+            for(var i=0;i<row_len;i++){
+                chessBoard[i]=new Array();
+                for(var j=0;j<column_len;j++){
+                    chessBoard[i][j]=0;
+                }
+            }
+
+
+            //生成不同的数字
+            var num=-1;
+            for(var i=0;i<row_len;i++){
+                for(var j=0;j<column_len;j=j+2){
+                    num=parseInt(  Math.random()*9+1);     //生成随机数范围[1,9]
+                    chessBoard[i][j]=num;
+                    //保证成双成对出现
+                    chessBoard[i][j+1]=chessBoard[i][j];
+                }
+            }
+
+
+            //打乱棋盘的顺序
+            for(var i=0;i<row_len*column_len;i++){
+                //随机生成你要调换位置的两个点的坐标
+                var x1=parseInt(  Math.random()*row_len);
+                var y1=parseInt(  Math.random()*column_len);
+                var x2=parseInt(  Math.random()*row_len);
+                var y2=parseInt(  Math.random()*column_len);
+                //不要加因为数组索引从0开始
+                var temp=chessBoard[x1][y1];
+                chessBoard[x1][y1]=chessBoard[x2][y2];
+                chessBoard[x2][y2]=temp;
+
+            }
+
+
+            //显示在网页上
+            var str="";
+            for(var i=0;i<row_len;i++){
+                for(var j=0;j<column_len;j++){
+                    str+="&nbsp;&nbsp;" + chessBoard[i][j] + "&nbsp;&nbsp;";
+                }
+                str+="<br/>";
+            }
+            document.getElementById("content").innerHTML=str;
+
+
+            //开始消除
+            function del() {
+                //首先，取到这四个值
+                var x1=document.getElementsByClassName("zb")[0].value;
+                var y1=document.getElementsByClassName("zb")[1].value;
+                var x2=document.getElementsByClassName("zb")[2].value;
+                var y2=document.getElementsByClassName("zb")[3].value;
+                console.log(x1+"-"+ y1 +"-" + x2 + "-" +y2);
+                //值已经取到，然后做消除判断
+                //消除规则一：两个值一定要相等
+                x1--;y1--;x2--;y2--;
+                console.log(chessBoard[x1][y1]+"...."+chessBoard[x2][y2]);
+                if(chessBoard[x1][y1]=chessBoard[x2][y2]){
+                    //首先，做单线消除
+                    //因为判断是否可以消除代码过长将会混乱，所以写两个方法
+                    //1.用于判断是否是同线   2.用于判断是否是一折消除
+                    if(  isSameLine(x1,y1,x2,y2) || isOneZhe(x1,y1,x2,y2) ){
+                        //规则符合，则消除
+                        chessBoard[x1][y1]=" ";
+                        chessBoard[x2][y2]=" ";
+                        //重新绘制棋盘，上面定义为空格只是改变数组的值不是改变网页上的棋盘
+                        var str="";
+                        for(var i=0;i<row_len;i++){
+                            for(var j=0;j<column_len;j++){
+                                str+="&nbsp;&nbsp;" + chessBoard[i][j] + "&nbsp;&nbsp;";
+                            }
+                            str+="<br/>";
+                        }
+                        document.getElementById("content").innerHTML=str;
+
+                    }else {
+                        alert("规则不符，请重新选择");
+                    }
+                }else {
+                    alert("输入的两点的值不同，请重新输入");
+                }
+            }
+
+            function isSameLine(x1,y1,x2,y2) {
+                //一线消除
+                if(x1==x2){
+                    //x轴相同
+                    //首先确y1<y2
+                    var miny=Math.min(y1,y2);
+                    var maxy=Math.max(y1,y2);
+                    for(var i=miny+1;i<maxy;i++){
+                        if(chessBoard[x1][i]!=" "){
+                            //意味着你们两点之间，还有不为空的，消除失败
+                            return false;
+                        }
+                    }
+                    if(i==maxy){
+                        return true;
+                    }
+                }else if(y1==y2){
+                    //y轴相同
+                    var minx=Math.min(x1,x2);
+                    var maxx=Math.max(x1,x2);
+                    for(var i=minx+1;i<maxx;i++){
+                        if(chessBoard[i][y1]!=" "){
+                            //意味着你们两点之间，还有不为空的，消除失败
+                            return false;
+                        }
+                    }
+                    if(i==maxx){
+                        return true;
+                    }
+                }else {
+                    return false;
+                }
+            }
+
+
+            function isOneZhe(x1,y1,x2,y2) {
+                if(x2>x1){
+                    var flag=false;
+                    //两点，第一个点在左上，第二点在右下
+                    for(var i=y1+1;i<=y2;i++){
+                        if(chessBoard[x1][i]!=" "){
+                            flag=true;          //意味着横着走没走通就要竖着走
+                            break;
+                        }
+                    }
+                    //判断横着走是否走通，走通了就竖着走，没走通就重新竖着走
+                    if(flag){
+                        //第一次横着走没走通，就干脆竖着走
+                        for(var k=x1+1;k<x2;k++){
+                            if(chessBoard[k][y1]!=" "){
+                                return false;
+                            }
+                        }
+                        //上一步走通，那么接着走
+                        for(var z=y1;z<y2;z++){
+                            if(chessBoard[x2][z]!=" "){
+                                return false;
+                            }
+                        }
+                        //两步都走通，接着走
+                        return true;
+                    }else {
+                        //第一次横着走走通了，就验证竖着走
+                        for(var j=x1+1;j<x2;j++){
+                            if(chessBoard[j][y2]!=" "){
+                                return false;
+                            }
+                        }
+                        return true;
+                    }
+                }else {
+                    //一个在左下一个在右上
+                }
+            }
+        </script>
+</body>
+</html>
